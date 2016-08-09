@@ -181,7 +181,7 @@ class MyboxmanJob
             'destinationCountry'=>$this->deliveryAddress->country,
             'destinationStreetNumber'=>$this->deliveryAddress->number,
             'destinationStreet'=>$this->deliveryAddress->street,
-            'gmt'=>'01000',
+            'gmt'=>'0100',
         );
 
         if ($this->loadingType=="FIX") {
