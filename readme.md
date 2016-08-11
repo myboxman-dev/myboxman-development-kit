@@ -199,6 +199,9 @@ Returns the possible categories in an array
 #### getId()
 Returns job Id
 
+#### getLastResponse()
+Returns the last API response, used mostly for debugging purpose
+
 ### Mission control methods
 
 #### getEstimation()
