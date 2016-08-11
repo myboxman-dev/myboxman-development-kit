@@ -4,8 +4,8 @@ class MyboxmanJob
 {
   public $loadingAddress = "";
   public $deliveryAddress = "";
-  public $loadingType = "ASAP";
-  public $deliveryType = "ASAP";
+  protected $loadingType = "ASAP";
+  protected $deliveryType = "ASAP";
   protected $loadingDateTime1 = "";
   protected $loadingDateTime2 = "";
   protected $deliveryDateTime1 = "";
@@ -23,6 +23,7 @@ class MyboxmanJob
   private $_currentcURLMethod = "";
   private $_currentcURLRoute = "";
   private $_currentcURLParams = "";
+  private $_lastAPIResponse = "";
 
   public function __construct($credentials, $jobId=null, $debug=null) {
     if($debug) {
@@ -42,7 +43,7 @@ class MyboxmanJob
 
   }
 
-  public function loadJobFromJobId($jobId) {
+  private function loadJobFromJobId($jobId) {
     $http = $this->getHttpObject("/api/getJobDetails", "GET");
 
     curl_setopt($http, CURLOPT_URL, $this->_currentcURLRoute.'?'.http_build_query(array('jobId'=>$jobId)));
@@ -52,7 +53,7 @@ class MyboxmanJob
         $res = json_decode($res);
 
         $job = $res->response;
-        $this->jobId = $job->_id;
+        $this->id = $job->_id;
         $this->title = $job->title;
         $this->description = $job->description;
         $this->categoryId = $job->categoryId;
@@ -132,6 +133,13 @@ class MyboxmanJob
     }
   }
 
+  public function getLoadingType() {
+    return $this->loadingType;
+  }
+  public function getDeliveryType() {
+    return $this->deliveryType;
+  }
+
   public function setDeliveryType($type) {
     $availableTypes = $this->getTypes();
     if (in_array($type, $availableTypes)) {
@@ -153,6 +161,20 @@ class MyboxmanJob
 
     $this->loadingDateTime1 = $loadingDateTime1;
     $this->loadingDateTime2 = $loadingDateTime2;
+  }
+
+  public function getLoadingTimes() {
+    return (object) array(
+      'loadingDateTime1'=>$this->loadingDateTime1,
+      'loadingDateTime2'=>$this->loadingDateTime2,
+    );
+  }
+
+  public function getDeliveryTimes() {
+    return (object) array(
+      'deliveryDateTime1'=>$this->deliveryDateTime1,
+      'deliveryDateTime2'=>$this->deliveryDateTime2,
+    );
   }
 
   public function setDeliveryDateTime($deliveryDateTime1,$deliveryDateTime2="") {
@@ -259,10 +281,14 @@ class MyboxmanJob
     }
 
     if ($this->_currentcURLMethod=="POST") {
-      curl_setopt($http, CURLOPT_POSTFIELDS, $params);
+      curl_setopt($http, CURLOPT_POSTFIELDS, http_build_query($params));
     }
 
     return $http;
+  }
+
+  public function getLastResponse() {
+    return $this->_lastAPIResponse;
   }
 
   private function initCardId() {
@@ -271,6 +297,7 @@ class MyboxmanJob
 
       $res = curl_exec($http);
       $res = json_decode($res);
+      $this->_lastAPIResponse = $res;
       $this->cardId = $res->response[0]->cardId;
 
     }
@@ -280,7 +307,11 @@ class MyboxmanJob
     $http = $this->getHttpObject('/api/getDateTypes', "GET");
 
     $res = curl_exec($http);
-    return json_decode($res,true);
+    $res = json_decode($res,true);
+
+    $this->_lastAPIResponse = $res;
+
+    return $res;
 
   }
 
@@ -288,7 +319,11 @@ class MyboxmanJob
     $http = $this->getHttpObject('/api/getCategories', "GET");
 
     $res = curl_exec($http);
-    return json_decode($res,true);
+    $res = json_decode($res,true);
+
+    $this->_lastAPIResponse = $res;
+
+    return $res;
 
   }
 
@@ -301,11 +336,14 @@ class MyboxmanJob
 
     $res = json_decode($res);
     $this->price = $res->response->price;
+
+    $this->_lastAPIResponse = $res;
+
     return $res;
   }
 
-  public function getJobId() {
-    return $this->jobId;
+  public function getId() {
+    return $this->id;
   }
 
   public function postJob() {
@@ -329,8 +367,47 @@ class MyboxmanJob
 
       $res = curl_exec($http);
       $res = json_decode($res);
+
+      $this->_lastAPIResponse = $res;
+
       $this->jobId = $res->response->jobId;
       return $res;
+  }
+
+  public function confirmPickup($codeConfirm) {
+
+    $http = $this->getHttpObject('/api/confirmPickup', 'POST');
+
+    $params = array(
+      'jobId'=>$this->id,
+      'confirmationCode'=>$codeConfirm,
+    );
+
+    curl_setopt($http, CURLOPT_POSTFIELDS, http_build_query($params));
+
+    $res = curl_exec($http);
+    $res = json_decode($res);
+
+    $this->_lastAPIResponse = $res;
+
+
+    return $res->status==200;
+
+  }
+
+  public function confirmDelivery() {
+
+    $http = $this->getHttpObject('/api/confirmDelivery', 'POST');
+
+    $params = array(
+      'jobId'=>$this->id,
+    );
+
+    curl_setopt($http, CURLOPT_POSTFIELDS, http_build_query($params));
+    $res = curl_exec($http);
+    $res = json_decode($res);
+
+    return $res->status==200;
   }
 
 
