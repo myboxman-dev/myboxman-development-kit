@@ -1,6 +1,6 @@
 var myboxmanjob = require('myboxmanjob');
 
-var job = new myboxmanjob.job(null,null,true);
+var job = new myboxmanjob.job(null,true);
 
 job.setLoadingAddress('31','rue de reuilly','paris','france');
 job.setDeliveryAddress('38','rue simon lambacq','sinceny','france');
@@ -15,22 +15,26 @@ job.categoryId = 3;
 
 job.setLoadingType('ASAP');
 
-job.setLoadingDateTime(new Date('2016-08-13 16:00:00'),new Date('2016-08-13 17:00:00'));
-job.setDeliveryDateTime(new Date('2016-08-13 18:00:00'),new Date('2016-08-13 19:00:00'));
+job.setLoadingDateTime(new Date('2016-08-16 16:00:00'),new Date('2016-08-16 17:00:00'));
+job.setDeliveryDateTime(new Date('2016-08-16 18:00:00'),new Date('2016-08-16 19:00:00'));
 
-job.getEstimation(function(res) {
-  var price = res.price;
-  console.log(price)
-  if(price<200) {
-    job.postJob(onJobPosted);
+job.getEstimation(onJobEstimated)
+
+function onJobEstimated(res,body) {
+  if (res) {
+    var price = body.price;
+    console.log(price)
+    job.postJob(onJobPosted)
+  } else {
+    console.log(body)
   }
-});
+}
 
-
-
-function onJobPosted(res) {
+function onJobPosted(res,body) {
   if (res) {
     console.log('Job posted '+job.getJobId());
+  } else {
+    console.log(err);
   }
 }
 
