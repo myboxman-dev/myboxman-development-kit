@@ -3,7 +3,7 @@ var myboxmanjob = require('myboxmanjob');
 var job = new myboxmanjob.job(null,true);
 
 job.setLoadingAddress('31','rue de reuilly','paris','france');
-job.setDeliveryAddress('38','rue simon lambacq','sinceny','france');
+job.setDeliveryAddress('38','rue Condorcet','paris','france');
 
 job.title = "Job crée avec le MDK NodeJS";
 job.description = "Mission fictive";
